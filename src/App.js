@@ -1,65 +1,51 @@
 import { useEffect, useState } from "react";
-import Card from "./Card";
+import "./App.css";
 
 function App() {
-  const [counties, setCountries] = useState([]);
-  const [error, setError] = useState(null);
+  const [data, setData] = useState([]);
+  const [text, setText] = useState("");
 
-  const [search, setSearch] = useState("");
-  const [filteredCounties, setFilteredCounties] = useState([]);
-
-  const fetchCounties = () => {
-    const URL = "https://restcountries.com/v3.1/all";
-
-    fetch(URL)
-      .then((response) => response.json())
-      .then((data) => setCountries(data))
-      .catch((error) => {
-        setError(error.message);
-        console.error("Error fetching data: ", error);
-      });
+  const getCountryData = async () => {
+    try {
+      const response = await fetch(`https://restcountries.com/v3.1/all`);
+      const resInJSON = await response.json();
+      setData(resInJSON);
+    } catch (error) {
+      console.log(`Error fetching data: `, error);
+    }
   };
 
-  const filterCountries = (search) => {
-    const filter = counties.filter((country) =>
-      country.name.common.toLowerCase().includes(search.toLowerCase())
-    );
-    setFilteredCounties(filter);
-  };
   useEffect(() => {
-    filterCountries(search);
-  }, [search]);
-
-  useEffect(() => {
-    fetchCounties();
+    getCountryData();
   }, []);
 
   return (
-    <main>
-      <div className="searchbox">
+    <>
+      <div className="input-box">
         <input
           type="text"
-          placeholder="Search for countries..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          className="search-box"
+          placeholder="Search for Countries"
+          onChange={(e) => setText(e.target.value)}
         />
       </div>
-      {error ? (
-        <h2>"Error fetching data : {error}"</h2>
-      ) : search.length > 0 ? (
-        <div className="container">
-          {filteredCounties.map((country, index) => (
-            <Card data={country} key={index} />
-          ))}
-        </div>
-      ) : (
-        <div className="container">
-          {counties.map((country, index) => (
-            <Card data={country} key={index} />
-          ))}
-        </div>
-      )}
-    </main>
+      <div className="main__div">
+        {data
+          .filter((ctry) =>
+            !text.length
+              ? ctry
+              : ctry.name.common.toLowerCase().includes(text.toLowerCase())
+          )
+          .map((country) => {
+            return (
+              <div key={country.cca3} className="countryCard">
+                <img src={country.flags["svg"]} alt={country.flags["alt"]} />
+                <h2>{country.name.common}</h2>
+              </div>
+            );
+          })}
+      </div>
+    </>
   );
 }
 
